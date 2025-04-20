@@ -10,14 +10,14 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
 
       create_list(:answer, 2, question_id: question.id, response_id: response.id, answer: 3)
 
-      (0..5).each do |score|
-        next if score == 3
-        allow(Answer).to receive(:where).with(
-          question_id: question.id,
-          answer: score,
-          response_id: response.id
-        ).and_return(double(count: 0))
-      end
+      # (0..5).each do |score|
+      #   next if score == 3
+      #   allow(Answer).to receive(:where).with(
+      #     question_id: question.id,
+      #     answer: score,
+      #     response_id: response.id
+      #   ).and_return(double(count: 0))
+      # end
     end
 
     it 'returns correct counts for scores' do
