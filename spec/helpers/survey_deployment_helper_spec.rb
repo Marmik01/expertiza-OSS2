@@ -1,7 +1,13 @@
 RSpec.describe SurveyDeploymentHelper, type: :helper do
   describe '#get_responses_for_question_in_a_survey_deployment' do
     let(:question) { create(:question) }
-    let(:survey_deployment) { create(:survey_deployment, id: 9999, type: 'AssignmentSurveyDeployment') }
+    let(:survey_deployment) do
+      create(:survey_deployment,
+             id: 9999,
+             type: 'AssignmentSurveyDeployment',
+             start_date: Time.now + 1.day,
+             end_date: Time.now + 2.days)
+    end    
     let(:response_map) do
       create(:review_response_map, reviewee_id: survey_deployment.id, type: 'AssignmentSurveyResponseMap')
     end
