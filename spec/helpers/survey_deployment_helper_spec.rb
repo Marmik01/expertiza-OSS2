@@ -1,6 +1,6 @@
 RSpec.describe SurveyDeploymentHelper, type: :helper do
   describe '#get_responses_for_question_in_a_survey_deployment' do
-    let(:question) { build_stubbed(:question) }
+    let(:question) { create(:question) }
     let(:survey_deployment) { build_stubbed(:survey_deployment, id: 9999) }
     let(:response_map) { create(:review_response_map, reviewee_id: survey_deployment.id) }
     let(:response) { create(:response, response_map: response_map) }
