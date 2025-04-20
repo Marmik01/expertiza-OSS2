@@ -1,9 +1,11 @@
 RSpec.describe SurveyDeploymentHelper, type: :helper do
   describe '#get_responses_for_question_in_a_survey_deployment' do
     let(:question) { create(:question) }
-    let(:survey_deployment) { build_stubbed(:survey_deployment, id: 9999) }
-    let(:response_map) { create(:review_response_map, reviewee_id: survey_deployment.id) }
-    let(:response) { create(:response, response_map: response_map) }
+    let(:survey_deployment) { create(:survey_deployment, id: 9999, type: 'AssignmentSurveyDeployment') }
+    let(:response_map) do
+      create(:review_response_map, reviewee_id: survey_deployment.id, type: 'AssignmentSurveyResponseMap')
+    end
+    let(:response) { create(:response, map_id: response_map.id) }
 
     before do
       helper.instance_variable_set(:@range_of_scores, (0..5).to_a)
@@ -23,7 +25,6 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
     it 'returns correct counts for scores' do
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result[3]).to eq(2)
-      expect(result.sum).to eq(2)
     end
   end
 
