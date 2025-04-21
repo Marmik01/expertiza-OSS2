@@ -23,13 +23,11 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(result[3]).to eq(2)
     end
 
-    # new
     it 'returns zero counts when no answers exist' do
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result).to eq([0, 0, 0, 0, 0, 0])
     end
 
-    # new
     it 'returns correct distribution across multiple scores' do
       create(:answer, question_id: question.id, response_id: response.id, answer: 1)
       create(:answer, question_id: question.id, response_id: response.id, answer: 2)
@@ -38,7 +36,6 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(result).to eq([0, 1, 1, 0, 0, 2])
     end
 
-    # new
     it 'aggregates answer counts from multiple response maps' do
       create(:answer, question_id: question.id, response_id: response.id, answer: 3)
 
@@ -49,6 +46,34 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
 
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result[3]).to eq(2)
+    end
+
+    # new: handles invalid survey_deployment id
+    it 'returns all zeros if survey_deployment id is invalid' do
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, -1)
+      expect(result).to eq([0, 0, 0, 0, 0, 0])
+    end
+
+    # new: handles invalid question id
+    it 'raises error when invalid question id is used' do
+      expect {
+        helper.get_responses_for_question_in_a_survey_deployment(-123, survey_deployment.id)
+      }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    # new: handles nil @range_of_scores
+    it 'returns empty array when @range_of_scores is nil' do
+      helper.instance_variable_set(:@range_of_scores, nil)
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([])
+    end
+
+    # new: handles custom score range
+    it 'works correctly with custom @range_of_scores (1 to 3)' do
+      helper.instance_variable_set(:@range_of_scores, (1..3).to_a)
+      create(:answer, question_id: question.id, response_id: response.id, answer: 2)
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([0, 1, 0])
     end
   end
 
@@ -73,13 +98,12 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(helper.allowed_question_type?(question)).to be false
     end
 
-    # new
     it 'returns false for an empty string type' do
       question = double('Question', type: '')
       expect(helper.allowed_question_type?(question)).to be false
     end
 
-    # new
+    # new: verifies a type that is unknown/unsupported
     it 'returns false for an unknown type' do
       question = double('Question', type: 'Dropdown')
       expect(helper.allowed_question_type?(question)).to be false
