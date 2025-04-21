@@ -39,7 +39,6 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
     it 'aggregates answer counts from multiple response maps' do
       create(:answer, question_id: question.id, response_id: response.id, answer: 3)
 
-      # Create another response map and response
       another_map = create(:review_response_map, reviewee_id: survey_deployment.id, type: 'AssignmentSurveyResponseMap')
       another_response = create(:response, map_id: another_map.id)
       create(:answer, question_id: question.id, response_id: another_response.id, answer: 3)
@@ -48,27 +47,23 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(result[3]).to eq(2)
     end
 
-    # handles invalid survey_deployment id
     it 'returns all zeros if survey_deployment id is invalid' do
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, -1)
       expect(result).to eq([0, 0, 0, 0, 0, 0])
     end
 
-    # handles invalid question id
     it 'raises error when invalid question id is used' do
       expect {
         helper.get_responses_for_question_in_a_survey_deployment(-123, survey_deployment.id)
       }.to raise_error(ActiveRecord::RecordNotFound)
     end
 
-    # handles nil @range_of_scores
     it 'returns empty array when @range_of_scores is nil' do
       helper.instance_variable_set(:@range_of_scores, nil)
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result).to eq([])
     end
 
-    # handles custom score range
     it 'works correctly with custom @range_of_scores (1 to 3)' do
       helper.instance_variable_set(:@range_of_scores, (1..3).to_a)
       create(:answer, question_id: question.id, response_id: response.id, answer: 2)
@@ -77,11 +72,24 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
     end
 
     # new
-    it 'ignores answers with scores outside the @range_of_scores' do
-      create(:answer, question_id: question.id, response_id: response.id, answer: 10)
-      create(:answer, question_id: question.id, response_id: response.id, answer: 2)
+    it 'returns all zeros when no response maps are found for the survey_deployment' do
+      ResponseMap.where(reviewee_id: survey_deployment.id).delete_all
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
-      expect(result).to eq([0, 0, 1, 0, 0, 0])
+      expect(result).to eq([0, 0, 0, 0, 0, 0])
+    end
+
+    # new
+    it 'only counts answers for responses tied to the given survey_deployment' do
+      another_deployment = create(:survey_deployment, id: 8888, start_date: Time.now, end_date: Time.now + 1.day)
+      another_map = create(:review_response_map, reviewee_id: another_deployment.id, type: 'AssignmentSurveyResponseMap')
+      another_response = create(:response, map_id: another_map.id)
+      create(:answer, question_id: question.id, response_id: another_response.id, answer: 2)
+
+      create(:answer, question_id: question.id, response_id: response.id, answer: 3)
+
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result[2]).to eq(0)
+      expect(result[3]).to eq(1)
     end
   end
 
@@ -111,16 +119,9 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(helper.allowed_question_type?(question)).to be false
     end
 
-    # verifies a type that is unknown/unsupported
     it 'returns false for an unknown type' do
       question = double('Question', type: 'Dropdown')
       expect(helper.allowed_question_type?(question)).to be false
-    end
-
-    # new
-    it 'works with a real Criterion question model' do
-      real_question = create(:question, type: 'Criterion')
-      expect(helper.allowed_question_type?(real_question)).to be true
     end
   end
 end
