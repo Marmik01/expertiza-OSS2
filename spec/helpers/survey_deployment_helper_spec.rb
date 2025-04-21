@@ -71,6 +71,13 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(result).to eq([0, 1, 0])
     end
 
+    it 'ignores answers with scores outside the @range_of_scores' do
+      create(:answer, question_id: question.id, response_id: response.id, answer: 10)
+      create(:answer, question_id: question.id, response_id: response.id, answer: 2)
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([0, 0, 1, 0, 0, 0])
+    end
+    
     # new
     it 'returns all zeros when no response maps are found for the survey_deployment' do
       ResponseMap.where(reviewee_id: survey_deployment.id).delete_all
@@ -122,6 +129,11 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
     it 'returns false for an unknown type' do
       question = double('Question', type: 'Dropdown')
       expect(helper.allowed_question_type?(question)).to be false
+    end
+
+    it 'works with a real Criterion question model' do
+      real_question = create(:question, type: 'Criterion')
+      expect(helper.allowed_question_type?(real_question)).to be true
     end
   end
 end
