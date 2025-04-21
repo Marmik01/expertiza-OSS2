@@ -40,6 +40,13 @@ RSpec.describe SurveyDeployment, type: :model do
       survey_deployment = SurveyDeployment.new(start_date: Time.now, end_date: Time.now + 1.day, questionnaire_id: 98, parent_id: 12112, type: 'CourseSurveyDeployment')
       expect(survey_deployment).to be_valid
     end
+
+    it 'is valid when start_date and end_date are the same' do
+      now = Time.now
+      survey_deployment = SurveyDeployment.new(start_date: now, end_date: now, questionnaire_id: 98, parent_id: 12112, type: 'CourseSurveyDeployment')
+      expect(survey_deployment).to be_valid
+    end
+
   end
 
   describe 'abstract methods' do
