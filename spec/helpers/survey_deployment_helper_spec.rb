@@ -77,7 +77,7 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result).to eq([0, 0, 1, 0, 0, 0])
     end
-    
+
     # new
     it 'returns all zeros when no response maps are found for the survey_deployment' do
       ResponseMap.where(reviewee_id: survey_deployment.id).delete_all
@@ -97,6 +97,31 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result[2]).to eq(0)
       expect(result[3]).to eq(1)
+    end
+
+    # new
+    it 'ignores answers with nil scores' do
+      create(:answer, question_id: question.id, response_id: response.id, answer: nil)
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([0, 0, 0, 0, 0, 0])
+    end
+
+    # new
+    it 'returns zeros if response maps have no responses' do
+      Response.where(map_id: response_map.id).delete_all
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([0, 0, 0, 0, 0, 0])
+    end
+
+    # new
+    it 'only includes answers for the given question ID' do
+      another_question = create(:question)
+      create(:answer, question_id: another_question.id, response_id: response.id, answer: 5)
+      create(:answer, question_id: question.id, response_id: response.id, answer: 2)
+
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result[2]).to eq(1)
+      expect(result[5]).to eq(0)
     end
   end
 
@@ -134,6 +159,18 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
     it 'works with a real Criterion question model' do
       real_question = create(:question, type: 'Criterion')
       expect(helper.allowed_question_type?(real_question)).to be true
+    end
+
+    # new
+    it 'returns false for lowercase valid type' do
+      question = double('Question', type: 'criterion')
+      expect(helper.allowed_question_type?(question)).to be false
+    end
+
+    # new
+    it 'returns false for non-string type like symbol' do
+      question = double('Question', type: :Criterion)
+      expect(helper.allowed_question_type?(question)).to be false
     end
   end
 end
