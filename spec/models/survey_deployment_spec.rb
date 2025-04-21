@@ -1,12 +1,10 @@
 # spec/models/survey_deployment_spec.rb
 require 'rails_helper'
 
-
-let(:assgt_survey_questionnaire) { AssignmentSurveyQuestionnaire.new id: 99, name: 'assgt_survey', private: 0, min_question_score: 0, max_question_score: 10, instructor_id: 1000 }
-let(:course_survey_questionnaire) { CourseSurveyQuestionnaire.new id: 98, name: 'course_survey', private: 0, min_question_score: 0, max_question_score: 10, instructor_id: 1000 }
-let(:response_map) { build(:review_response_map, reviewer_id: 2) }
-
 RSpec.describe SurveyDeployment, type: :model do
+  let(:assgt_survey_questionnaire) { AssignmentSurveyQuestionnaire.new id: 99, name: 'assgt_survey', private: 0, min_question_score: 0, max_question_score: 10, instructor_id: 1000 }
+  let(:course_survey_questionnaire) { CourseSurveyQuestionnaire.new id: 98, name: 'course_survey', private: 0, min_question_score: 0, max_question_score: 10, instructor_id: 1000 }
+  let(:response_map) { build(:review_response_map, reviewer_id: 2) }
   describe 'validations' do
     it 'is invalid without a start_date' do
       sd = SurveyDeployment.new(end_date: Time.now + 1.day, questionnaire_id: 985, parent_id: '12345678', type: 'CourseSurveyDeployment')
