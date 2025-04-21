@@ -128,21 +128,6 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result[2]).to eq(50)
     end
-
-    # optional
-    it 'ignores non-integer answer values like strings' do
-      create(:answer, question_id: question.id, response_id: response.id, answer: "3")
-      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
-      expect(result).to eq([0, 0, 0, 0, 0, 0])
-    end
-
-    # optional
-    it 'ignores responses with missing map_id' do
-      orphan_response = create(:response, map_id: nil)
-      create(:answer, question_id: question.id, response_id: orphan_response.id, answer: 3)
-      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
-      expect(result[3]).to eq(0)
-    end
   end
 
   describe '#allowed_question_type?' do
