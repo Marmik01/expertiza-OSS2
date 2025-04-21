@@ -15,20 +15,38 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
 
     before do
       helper.instance_variable_set(:@range_of_scores, (0..5).to_a)
-
-      create_list(:answer, 2, question_id: question.id, response_id: response.id, answer: 3)
-
-      # (0..5).each do |score|
-      #   next if score == 3
-      #   allow(Answer).to receive(:where).with(
-      #     question_id: question.id,
-      #     answer: score,
-      #     response_id: response.id
-      #   ).and_return(double(count: 0))
-      # end
     end
 
     it 'returns correct counts for scores' do
+      create_list(:answer, 2, question_id: question.id, response_id: response.id, answer: 3)
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result[3]).to eq(2)
+    end
+
+    # new
+    it 'returns zero counts when no answers exist' do
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([0, 0, 0, 0, 0, 0])
+    end
+
+    # new
+    it 'returns correct distribution across multiple scores' do
+      create(:answer, question_id: question.id, response_id: response.id, answer: 1)
+      create(:answer, question_id: question.id, response_id: response.id, answer: 2)
+      create_list(:answer, 2, question_id: question.id, response_id: response.id, answer: 5)
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([0, 1, 1, 0, 0, 2])
+    end
+
+    # new
+    it 'aggregates answer counts from multiple response maps' do
+      create(:answer, question_id: question.id, response_id: response.id, answer: 3)
+
+      # Create another response map and response
+      another_map = create(:review_response_map, reviewee_id: survey_deployment.id, type: 'AssignmentSurveyResponseMap')
+      another_response = create(:response, map_id: another_map.id)
+      create(:answer, question_id: question.id, response_id: another_response.id, answer: 3)
+
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result[3]).to eq(2)
     end
@@ -52,6 +70,18 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
 
     it 'returns false for nil type' do
       question = double('Question', type: nil)
+      expect(helper.allowed_question_type?(question)).to be false
+    end
+
+    # new
+    it 'returns false for an empty string type' do
+      question = double('Question', type: '')
+      expect(helper.allowed_question_type?(question)).to be false
+    end
+
+    # new
+    it 'returns false for an unknown type' do
+      question = double('Question', type: 'Dropdown')
       expect(helper.allowed_question_type?(question)).to be false
     end
   end
