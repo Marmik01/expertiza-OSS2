@@ -78,14 +78,12 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(result).to eq([0, 0, 1, 0, 0, 0])
     end
 
-    # new
     it 'returns all zeros when no response maps are found for the survey_deployment' do
       ResponseMap.where(reviewee_id: survey_deployment.id).delete_all
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result).to eq([0, 0, 0, 0, 0, 0])
     end
 
-    # new
     it 'only counts answers for responses tied to the given survey_deployment' do
       another_deployment = create(:survey_deployment, id: 8888, start_date: Time.now, end_date: Time.now + 1.day)
       another_map = create(:review_response_map, reviewee_id: another_deployment.id, type: 'AssignmentSurveyResponseMap')
@@ -99,21 +97,18 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(result[3]).to eq(1)
     end
 
-    # new
     it 'ignores answers with nil scores' do
       create(:answer, question_id: question.id, response_id: response.id, answer: nil)
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result).to eq([0, 0, 0, 0, 0, 0])
     end
 
-    # new
     it 'returns zeros if response maps have no responses' do
       Response.where(map_id: response_map.id).delete_all
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result).to eq([0, 0, 0, 0, 0, 0])
     end
 
-    # new
     it 'only includes answers for the given question ID' do
       another_question = create(:question)
       create(:answer, question_id: another_question.id, response_id: response.id, answer: 5)
@@ -122,6 +117,31 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
       expect(result[2]).to eq(1)
       expect(result[5]).to eq(0)
+    end
+
+    # optional
+    it 'performs correctly with a large number of responses' do
+      50.times do
+        r = create(:response, map_id: response_map.id)
+        create(:answer, question_id: question.id, response_id: r.id, answer: 2)
+      end
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result[2]).to eq(50)
+    end
+
+    # optional
+    it 'ignores non-integer answer values like strings' do
+      create(:answer, question_id: question.id, response_id: response.id, answer: "3")
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result).to eq([0, 0, 0, 0, 0, 0])
+    end
+
+    # optional
+    it 'ignores responses with missing map_id' do
+      orphan_response = create(:response, map_id: nil)
+      create(:answer, question_id: question.id, response_id: orphan_response.id, answer: 3)
+      result = helper.get_responses_for_question_in_a_survey_deployment(question.id, survey_deployment.id)
+      expect(result[3]).to eq(0)
     end
   end
 
@@ -161,13 +181,11 @@ RSpec.describe SurveyDeploymentHelper, type: :helper do
       expect(helper.allowed_question_type?(real_question)).to be true
     end
 
-    # new
     it 'returns false for lowercase valid type' do
       question = double('Question', type: 'criterion')
       expect(helper.allowed_question_type?(question)).to be false
     end
 
-    # new
     it 'returns false for non-string type like symbol' do
       question = double('Question', type: :Criterion)
       expect(helper.allowed_question_type?(question)).to be false
