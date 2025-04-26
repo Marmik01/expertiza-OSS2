@@ -1,3 +1,8 @@
+## Acknowledgment
+
+This repository is derived from [VibhavDeo/expertiza](https://github.com/VibhavDeo/expertiza), which itself is a fork of [expertiza/expertiza](https://github.com/expertiza/expertiza).  
+Additional contributions were made to enhance functionality, improve test coverage, and fix bugs.
+
 Expertiza
 =========
 
